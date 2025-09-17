@@ -50,7 +50,7 @@ The Trading Engine System serves as the algorithmic brain of the trading ecosyst
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.13+
 - Docker and Docker Compose
 - Poetry (for dependency management)
 
