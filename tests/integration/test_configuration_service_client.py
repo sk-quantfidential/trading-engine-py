@@ -23,15 +23,15 @@ from typing import Optional, Dict, Any
 import time
 
 # These imports will fail initially (TDD RED phase)
-from trading_engine.infrastructure.config import Settings
-from trading_engine.infrastructure.configuration_client import (
+from trading_system.infrastructure.config import Settings
+from trading_system.infrastructure.configuration_client import (
     ConfigurationServiceClient,
     ConfigurationValue,
     ConfigurationError,
     DEFAULT_CACHE_TTL_SECONDS,
     VALID_CONFIG_TYPES
 )
-from trading_engine.infrastructure.service_discovery import ServiceDiscovery, ServiceInfo
+from trading_system.infrastructure.service_discovery import ServiceDiscovery, ServiceInfo
 
 
 class TestConfigurationValue:
@@ -214,16 +214,16 @@ class TestConfigurationServiceClient:
     async def test_get_configuration_success(self, client):
         """Test successful configuration retrieval."""
         # Mock HTTP response
-        with patch('aiohttp.ClientSession.get') as mock_get:
+        with patch('httpx.AsyncClient.get') as mock_get:
             mock_response = AsyncMock()
-            mock_response.status = 200
-            mock_response.json = AsyncMock(return_value={
+            mock_response.status_code = 200
+            mock_response.json.return_value = {
                 "key": "trading.position_limits.max_size",
                 "value": "1000000",
                 "type": "number",
                 "environment": "testing"
-            })
-            mock_get.return_value.__aenter__.return_value = mock_response
+            }
+            mock_get.return_value = mock_response
 
             config = await client.get_configuration("trading.position_limits.max_size")
 
@@ -235,10 +235,10 @@ class TestConfigurationServiceClient:
     @pytest.mark.asyncio
     async def test_get_configuration_not_found(self, client):
         """Test configuration retrieval when key not found."""
-        with patch('aiohttp.ClientSession.get') as mock_get:
+        with patch('httpx.AsyncClient.get') as mock_get:
             mock_response = AsyncMock()
-            mock_response.status = 404
-            mock_get.return_value.__aenter__.return_value = mock_response
+            mock_response.status_code = 404
+            mock_get.return_value = mock_response
 
             with pytest.raises(ConfigurationError, match="Configuration not found"):
                 await client.get_configuration("nonexistent.key")
@@ -246,11 +246,11 @@ class TestConfigurationServiceClient:
     @pytest.mark.asyncio
     async def test_get_configuration_service_error(self, client):
         """Test configuration retrieval with service error."""
-        with patch('aiohttp.ClientSession.get') as mock_get:
+        with patch('httpx.AsyncClient.get') as mock_get:
             mock_response = AsyncMock()
-            mock_response.status = 500
-            mock_response.text = AsyncMock(return_value="Internal Server Error")
-            mock_get.return_value.__aenter__.return_value = mock_response
+            mock_response.status_code = 500
+            mock_response.text = "Internal Server Error"
+            mock_get.return_value = mock_response
 
             with pytest.raises(ConfigurationError, match="Configuration service error"):
                 await client.get_configuration("some.key")
@@ -259,16 +259,16 @@ class TestConfigurationServiceClient:
     async def test_configuration_caching(self, client):
         """Test configuration caching functionality."""
         # Mock successful HTTP response
-        with patch('aiohttp.ClientSession.get') as mock_get:
+        with patch('httpx.AsyncClient.get') as mock_get:
             mock_response = AsyncMock()
-            mock_response.status = 200
-            mock_response.json = AsyncMock(return_value={
+            mock_response.status_code = 200
+            mock_response.json.return_value = {
                 "key": "trading.cache_test",
                 "value": "cached_value",
                 "type": "string",
                 "environment": "testing"
-            })
-            mock_get.return_value.__aenter__.return_value = mock_response
+            }
+            mock_get.return_value = mock_response
 
             # First call should hit the service
             config1 = await client.get_configuration("trading.cache_test")
@@ -319,16 +319,16 @@ class TestConfigurationServiceClient:
         """Test cache expiration functionality."""
         # Mock the cache TTL to be very short for testing
         with patch.object(client, '_cache_ttl', 0.1):  # 100ms TTL
-            with patch('aiohttp.ClientSession.get') as mock_get:
+            with patch('httpx.AsyncClient.get') as mock_get:
                 mock_response = AsyncMock()
-                mock_response.status = 200
-                mock_response.json = AsyncMock(return_value={
+                mock_response.status_code = 200
+                mock_response.json.return_value = {
                     "key": "trading.ttl_test",
                     "value": "initial_value",
                     "type": "string",
                     "environment": "testing"
-                })
-                mock_get.return_value.__aenter__.return_value = mock_response
+                }
+                mock_get.return_value = mock_response
 
                 # First call
                 config1 = await client.get_configuration("trading.ttl_test")
@@ -339,12 +339,12 @@ class TestConfigurationServiceClient:
                 await asyncio.sleep(0.2)
 
                 # Update mock to return different value
-                mock_response.json = AsyncMock(return_value={
+                mock_response.json.return_value = {
                     "key": "trading.ttl_test",
                     "value": "updated_value",
                     "type": "string",
                     "environment": "testing"
-                })
+                }
 
                 # Second call should fetch fresh data
                 config2 = await client.get_configuration("trading.ttl_test")
@@ -354,10 +354,10 @@ class TestConfigurationServiceClient:
     @pytest.mark.asyncio
     async def test_configuration_timeout_handling(self, client):
         """Test configuration retrieval timeout handling."""
-        with patch('aiohttp.ClientSession.get') as mock_get:
+        with patch('httpx.AsyncClient.get') as mock_get:
             # Simulate timeout
-            import aiohttp
-            mock_get.side_effect = asyncio.TimeoutError()
+            import httpx
+            mock_get.side_effect = httpx.TimeoutException("Request timeout")
 
             with pytest.raises(ConfigurationError, match="Configuration service timeout"):
                 await client.get_configuration("timeout.test")
@@ -376,16 +376,16 @@ class TestConfigurationServiceClient:
     @pytest.mark.asyncio
     async def test_concurrent_configuration_requests(self, client):
         """Test handling of concurrent configuration requests."""
-        with patch('aiohttp.ClientSession.get') as mock_get:
+        with patch('httpx.AsyncClient.get') as mock_get:
             mock_response = AsyncMock()
-            mock_response.status = 200
-            mock_response.json = AsyncMock(return_value={
+            mock_response.status_code = 200
+            mock_response.json.return_value = {
                 "key": "trading.concurrent_test",
                 "value": "concurrent_value",
                 "type": "string",
                 "environment": "testing"
-            })
-            mock_get.return_value.__aenter__.return_value = mock_response
+            }
+            mock_get.return_value = mock_response
 
             # Make multiple concurrent requests for the same key
             tasks = [
