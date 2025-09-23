@@ -31,14 +31,20 @@ from opentelemetry.trace import Status, StatusCode
 
 from .config import Settings
 from .service_discovery import ServiceDiscovery, ServiceInfo
-
-# gRPC and communication constants
-DEFAULT_GRPC_TIMEOUT = 30.0  # 30 seconds
-DEFAULT_RISK_MONITOR_PORT = 50054
-DEFAULT_TEST_COORDINATOR_PORT = 50053
-CIRCUIT_BREAKER_FAILURE_THRESHOLD = 5
-CIRCUIT_BREAKER_RECOVERY_TIMEOUT = 60  # seconds
-MAX_RETRY_ATTEMPTS = 3
+from .performance_monitor import PerformanceMonitor
+from .constants import (
+    DEFAULT_GRPC_TIMEOUT,
+    DEFAULT_RISK_MONITOR_PORT,
+    DEFAULT_TEST_COORDINATOR_PORT,
+    CIRCUIT_BREAKER_FAILURE_THRESHOLD,
+    CIRCUIT_BREAKER_RECOVERY_TIMEOUT,
+    CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS,
+    MAX_RETRY_ATTEMPTS,
+    RETRY_DELAY_BASE,
+    RETRY_DELAY_MAX,
+    OTEL_SERVICE_NAME,
+    OTEL_SPAN_ATTRIBUTES
+)
 
 logger = structlog.get_logger()
 tracer = trace.get_tracer(__name__)
@@ -261,6 +267,9 @@ class BaseGrpcClient:
         # Circuit breaker
         self.circuit_breaker = CircuitBreaker(service_name=service_name)
 
+        # Performance monitoring
+        self.performance_monitor = PerformanceMonitor(service_name=service_name)
+
         self._logger = logger.bind(
             component="grpc_client",
             service=service_name,
@@ -307,7 +316,8 @@ class BaseGrpcClient:
             await self.connect()
 
         self._total_requests += 1
-        self._last_request_time = time.time()
+        start_time = time.time()
+        self._last_request_time = start_time
 
         # Create tracing span
         with tracer.start_as_current_span(
@@ -325,18 +335,26 @@ class BaseGrpcClient:
                     self._execute_request, request_func, *args, **kwargs
                 )
 
+                # Record successful request in performance monitor
+                duration = time.time() - start_time
+                self.performance_monitor.record_request(duration, True, operation)
+
                 self._successful_requests += 1
                 span.set_status(Status(StatusCode.OK))
 
                 self._logger.debug(
                     "gRPC request successful",
                     operation=operation,
-                    duration_ms=(time.time() - self._last_request_time) * 1000
+                    duration_ms=duration * 1000
                 )
 
                 return result
 
             except Exception as e:
+                # Record failed request in performance monitor
+                duration = time.time() - start_time
+                self.performance_monitor.record_request(duration, False, operation)
+
                 self._failed_requests += 1
                 span.set_status(Status(StatusCode.ERROR, str(e)))
 
@@ -382,8 +400,10 @@ class BaseGrpcClient:
         raise NotImplementedError("Subclasses must implement health_check")
 
     def get_stats(self) -> Dict[str, Any]:
-        """Get client statistics."""
+        """Get comprehensive client statistics."""
         circuit_stats = self.circuit_breaker.get_stats()
+        performance_metrics = self.performance_monitor.get_metrics()
+        health_status = self.performance_monitor.get_health_status()
 
         return {
             "total_requests": self._total_requests,
@@ -399,7 +419,14 @@ class BaseGrpcClient:
                     circuit_stats.successful_calls / circuit_stats.total_calls
                     if circuit_stats.total_calls > 0 else 0.0
                 )
-            }
+            },
+            "performance": {
+                "average_response_time": performance_metrics.average_response_time,
+                "min_response_time": performance_metrics.min_response_time,
+                "max_response_time": performance_metrics.max_response_time,
+                "throughput_per_second": performance_metrics.throughput_per_second
+            },
+            "health": health_status
         }
 
     async def cleanup(self):

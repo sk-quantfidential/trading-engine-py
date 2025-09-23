@@ -27,12 +27,12 @@ import structlog
 
 from .config import Settings
 from .service_discovery import ServiceDiscovery, ServiceInfo
-
-# Configuration constants
-DEFAULT_CACHE_TTL_SECONDS = 300  # 5 minutes
-VALID_CONFIG_TYPES = ["string", "number", "boolean", "json"]
-DEFAULT_CONFIG_SERVICE_PORT = 8090
-DEFAULT_REQUEST_TIMEOUT = 10.0  # seconds
+from .constants import (
+    DEFAULT_CACHE_TTL_SECONDS,
+    VALID_CONFIG_TYPES,
+    DEFAULT_CONFIG_SERVICE_PORT,
+    CONNECTION_TIMEOUT as DEFAULT_REQUEST_TIMEOUT
+)
 
 logger = structlog.get_logger()
 
