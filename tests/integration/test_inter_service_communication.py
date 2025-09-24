@@ -306,59 +306,68 @@ class TestRiskMonitorClient:
             mock_channel.assert_called_once_with("localhost:50054")
 
     @pytest.mark.asyncio
-    @patch('trading_system.infrastructure.grpc_clients.RiskMonitorClient.connect')
-    async def test_risk_monitor_health_check(self, mock_connect, client):
+    async def test_risk_monitor_health_check(self, client):
         """Test RiskMonitorClient health check."""
-        # Mock successful health check
-        with patch.object(client, '_make_request') as mock_request:
-            mock_request.return_value = HealthResponse(
-                status="SERVING",
-                service="risk-monitor"
+        # Mock the stub and its methods
+        with patch.object(client, '_stub') as mock_stub:
+            mock_stub.health_check = AsyncMock()
+
+            # Mock successful health check
+            with patch.object(client, '_make_request') as mock_request:
+                mock_request.return_value = HealthResponse(
+                    status="SERVING",
+                    service="risk-monitor"
+                )
+
+                response = await client.health_check()
+
+                assert isinstance(response, HealthResponse)
+                assert response.status == "SERVING"
+                assert response.service == "risk-monitor"
+
+    @pytest.mark.asyncio
+    async def test_submit_strategy_status(self, client):
+        """Test submitting strategy status to risk monitor."""
+        # Mock the stub and its methods
+        with patch.object(client, '_stub') as mock_stub:
+            mock_stub.submit_strategy_status = AsyncMock()
+
+            strategy_status = StrategyStatus(
+                strategy_id="market_making_001",
+                status="ACTIVE",
+                positions=[
+                    Position(
+                        instrument_id="BTC/USD",
+                        quantity=0.5,
+                        value=25000.0,
+                        side="LONG"
+                    )
+                ],
+                last_updated=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
             )
 
-            response = await client.health_check()
+            # Mock successful submission
+            with patch.object(client, '_make_request') as mock_request:
+                mock_request.return_value = {"success": True, "message": "Status received"}
 
-            assert isinstance(response, HealthResponse)
-            assert response.status == "SERVING"
-            assert response.service == "risk-monitor"
+                response = await client.submit_strategy_status(strategy_status)
 
-    @pytest.mark.asyncio
-    @patch('trading_system.infrastructure.grpc_clients.RiskMonitorClient.connect')
-    async def test_submit_strategy_status(self, mock_connect, client):
-        """Test submitting strategy status to risk monitor."""
-        strategy_status = StrategyStatus(
-            strategy_id="market_making_001",
-            status="ACTIVE",
-            positions=[
-                Position(
-                    instrument_id="BTC/USD",
-                    quantity=0.5,
-                    value=25000.0,
-                    side="LONG"
-                )
-            ],
-            last_updated=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        )
-
-        # Mock successful submission
-        with patch.object(client, '_make_request') as mock_request:
-            mock_request.return_value = {"success": True, "message": "Status received"}
-
-            response = await client.submit_strategy_status(strategy_status)
-
-            assert response["success"] is True
-            mock_request.assert_called_once()
+                assert response["success"] is True
+                mock_request.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch('trading_system.infrastructure.grpc_clients.RiskMonitorClient.connect')
-    async def test_risk_monitor_client_error_handling(self, mock_connect, client):
+    async def test_risk_monitor_client_error_handling(self, client):
         """Test RiskMonitorClient error handling."""
-        # Mock gRPC error
-        with patch.object(client, '_make_request') as mock_request:
-            mock_request.side_effect = grpc.RpcError("Connection failed")
+        # Mock the stub and its methods
+        with patch.object(client, '_stub') as mock_stub:
+            mock_stub.health_check = AsyncMock()
 
-            with pytest.raises(ServiceCommunicationError, match="Connection failed"):
-                await client.health_check()
+            # Mock gRPC error conversion to ServiceCommunicationError
+            with patch.object(client, '_make_request') as mock_request:
+                mock_request.side_effect = ServiceCommunicationError("Connection failed")
+
+                with pytest.raises(ServiceCommunicationError, match="Connection failed"):
+                    await client.health_check()
 
     def test_risk_monitor_client_statistics(self, client):
         """Test RiskMonitorClient statistics tracking."""
@@ -430,18 +439,22 @@ class TestTestCoordinatorClient:
     @pytest.mark.asyncio
     async def test_test_coordinator_health_check(self, client):
         """Test TestCoordinatorClient health check."""
-        # Mock successful health check
-        with patch.object(client, '_make_request') as mock_request:
-            mock_request.return_value = HealthResponse(
-                status="SERVING",
-                service="test-coordinator"
-            )
+        # Mock the stub and its methods
+        with patch.object(client, '_stub') as mock_stub:
+            mock_stub.health_check = AsyncMock()
 
-            response = await client.health_check()
+            # Mock successful health check
+            with patch.object(client, '_make_request') as mock_request:
+                mock_request.return_value = HealthResponse(
+                    status="SERVING",
+                    service="test-coordinator"
+                )
 
-            assert isinstance(response, HealthResponse)
-            assert response.status == "SERVING"
-            assert response.service == "test-coordinator"
+                response = await client.health_check()
+
+                assert isinstance(response, HealthResponse)
+                assert response.status == "SERVING"
+                assert response.service == "test-coordinator"
 
     @pytest.mark.asyncio
     async def test_submit_scenario_status(self, client):
