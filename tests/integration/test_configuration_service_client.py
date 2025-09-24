@@ -215,7 +215,7 @@ class TestConfigurationServiceClient:
         """Test successful configuration retrieval."""
         # Mock HTTP response
         with patch('httpx.AsyncClient.get') as mock_get:
-            mock_response = AsyncMock()
+            mock_response = Mock()
             mock_response.status_code = 200
             mock_response.json.return_value = {
                 "key": "trading.position_limits.max_size",
@@ -236,7 +236,7 @@ class TestConfigurationServiceClient:
     async def test_get_configuration_not_found(self, client):
         """Test configuration retrieval when key not found."""
         with patch('httpx.AsyncClient.get') as mock_get:
-            mock_response = AsyncMock()
+            mock_response = Mock()
             mock_response.status_code = 404
             mock_get.return_value = mock_response
 
@@ -247,7 +247,7 @@ class TestConfigurationServiceClient:
     async def test_get_configuration_service_error(self, client):
         """Test configuration retrieval with service error."""
         with patch('httpx.AsyncClient.get') as mock_get:
-            mock_response = AsyncMock()
+            mock_response = Mock()
             mock_response.status_code = 500
             mock_response.text = "Internal Server Error"
             mock_get.return_value = mock_response
@@ -260,7 +260,7 @@ class TestConfigurationServiceClient:
         """Test configuration caching functionality."""
         # Mock successful HTTP response
         with patch('httpx.AsyncClient.get') as mock_get:
-            mock_response = AsyncMock()
+            mock_response = Mock()
             mock_response.status_code = 200
             mock_response.json.return_value = {
                 "key": "trading.cache_test",
@@ -320,7 +320,7 @@ class TestConfigurationServiceClient:
         # Mock the cache TTL to be very short for testing
         with patch.object(client, '_cache_ttl', 0.1):  # 100ms TTL
             with patch('httpx.AsyncClient.get') as mock_get:
-                mock_response = AsyncMock()
+                mock_response = Mock()
                 mock_response.status_code = 200
                 mock_response.json.return_value = {
                     "key": "trading.ttl_test",
@@ -377,7 +377,7 @@ class TestConfigurationServiceClient:
     async def test_concurrent_configuration_requests(self, client):
         """Test handling of concurrent configuration requests."""
         with patch('httpx.AsyncClient.get') as mock_get:
-            mock_response = AsyncMock()
+            mock_response = Mock()
             mock_response.status_code = 200
             mock_response.json.return_value = {
                 "key": "trading.concurrent_test",

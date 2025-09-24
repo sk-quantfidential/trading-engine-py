@@ -306,7 +306,8 @@ class TestRiskMonitorClient:
             mock_channel.assert_called_once_with("localhost:50054")
 
     @pytest.mark.asyncio
-    async def test_risk_monitor_health_check(self, client):
+    @patch('trading_system.infrastructure.grpc_clients.RiskMonitorClient.connect')
+    async def test_risk_monitor_health_check(self, mock_connect, client):
         """Test RiskMonitorClient health check."""
         # Mock successful health check
         with patch.object(client, '_make_request') as mock_request:
@@ -322,7 +323,8 @@ class TestRiskMonitorClient:
             assert response.service == "risk-monitor"
 
     @pytest.mark.asyncio
-    async def test_submit_strategy_status(self, client):
+    @patch('trading_system.infrastructure.grpc_clients.RiskMonitorClient.connect')
+    async def test_submit_strategy_status(self, mock_connect, client):
         """Test submitting strategy status to risk monitor."""
         strategy_status = StrategyStatus(
             strategy_id="market_making_001",
@@ -348,7 +350,8 @@ class TestRiskMonitorClient:
             mock_request.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_risk_monitor_client_error_handling(self, client):
+    @patch('trading_system.infrastructure.grpc_clients.RiskMonitorClient.connect')
+    async def test_risk_monitor_client_error_handling(self, mock_connect, client):
         """Test RiskMonitorClient error handling."""
         # Mock gRPC error
         with patch.object(client, '_make_request') as mock_request:
