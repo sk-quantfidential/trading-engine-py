@@ -9,7 +9,7 @@ service discovery integration, and comprehensive observability.
 Key Features:
 - InterServiceClientManager: Central management of all gRPC clients
 - RiskMonitorClient: gRPC client for risk-monitor service communication
-- TestCoordinatorClient: gRPC client for test-coordinator service communication
+- CoordinatorGrpcClient: gRPC client for test-coordinator service communication
 - Circuit Breaker Pattern: Resilient communication with automatic failure handling
 - Service Discovery: Dynamic endpoint resolution via Redis
 - OpenTelemetry Tracing: Distributed context propagation and performance monitoring
@@ -22,7 +22,7 @@ import grpc
 import time
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Any, List, Union
-from datetime import datetime
+from datetime import datetime, UTC
 from enum import Enum
 
 import structlog
@@ -100,7 +100,7 @@ class StrategyStatus:
     strategy_id: str
     status: str  # "ACTIVE", "STOPPED", "ERROR"
     positions: List[Position] = field(default_factory=list)
-    last_updated: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    last_updated: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 @dataclass
@@ -108,7 +108,7 @@ class ScenarioStatus:
     """Test scenario status data model for test coordinator communication."""
     scenario_id: str
     status: str  # "RUNNING", "COMPLETED", "FAILED"
-    start_time: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    start_time: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     end_time: Optional[str] = None
 
 
@@ -118,7 +118,7 @@ class ChaosEvent:
     event_type: str
     target_service: str
     event_id: str
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     metadata: Optional[Dict[str, Any]] = None
 
 
@@ -127,7 +127,7 @@ class HealthResponse:
     """Health check response data model."""
     status: str  # "SERVING", "NOT_SERVING"
     service: str
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 @dataclass
@@ -484,7 +484,7 @@ class RiskMonitorClient(BaseGrpcClient):
         )
 
 
-class TestCoordinatorClient(BaseGrpcClient):
+class CoordinatorGrpcClient(BaseGrpcClient):
     """gRPC client for test-coordinator service communication."""
 
     def __init__(
@@ -598,7 +598,7 @@ class InterServiceClientManager:
 
         return client
 
-    async def get_test_coordinator_client(self, use_fallback: bool = False) -> TestCoordinatorClient:
+    async def get_test_coordinator_client(self, use_fallback: bool = False) -> CoordinatorGrpcClient:
         """Get or create test coordinator gRPC client."""
         if "test-coordinator" in self._clients:
             return self._clients["test-coordinator"]
@@ -611,7 +611,7 @@ class InterServiceClientManager:
         )
 
         # Create and cache client
-        client = TestCoordinatorClient(host, port, self.settings)
+        client = CoordinatorGrpcClient(host, port, self.settings)
         self._clients["test-coordinator"] = client
 
         self._logger.info(
@@ -739,7 +739,7 @@ class MockTestCoordinatorStub:
                 ScenarioStatus(
                     scenario_id="load_test_001",
                     status="RUNNING",
-                    start_time=datetime.utcnow().isoformat()
+                    start_time=datetime.now(UTC).isoformat()
                 )
             ]
         }

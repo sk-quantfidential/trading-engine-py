@@ -21,7 +21,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Any, Union
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 import structlog
 
@@ -68,7 +68,7 @@ class ConfigurationValue:
     value: str
     type: str
     environment: str = "production"
-    retrieved_at: datetime = field(default_factory=datetime.utcnow)
+    retrieved_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def __post_init__(self):
         """Validate configuration type on creation."""
@@ -263,7 +263,7 @@ class ConfigurationServiceClient:
             return None
 
         # Check TTL
-        if datetime.utcnow() > entry.expires_at:
+        if datetime.now(UTC) > entry.expires_at:
             del self._cache[key]
             self._logger.debug("Configuration cache entry expired", key=key)
             return None
@@ -280,7 +280,7 @@ class ConfigurationServiceClient:
             key: Configuration key
             value: Configuration value to cache
         """
-        expires_at = datetime.utcnow() + timedelta(seconds=self._cache_ttl)
+        expires_at = datetime.now(UTC) + timedelta(seconds=self._cache_ttl)
         self._cache[key] = _CacheEntry(value=value, expires_at=expires_at)
         self._logger.debug("Configuration cached", key=key, expires_at=expires_at)
 

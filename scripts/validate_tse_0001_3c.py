@@ -38,7 +38,7 @@ from trading_system.infrastructure.configuration_client import (
 from trading_system.infrastructure.grpc_clients import (
     InterServiceClientManager,
     RiskMonitorClient,
-    TestCoordinatorClient,
+    CoordinatorGrpcClient,
     ServiceCommunicationError,
     DEFAULT_GRPC_TIMEOUT,
     DEFAULT_RISK_MONITOR_PORT,
@@ -192,7 +192,7 @@ class TSE0001_3c_Validator:
         # Test 3: Test coordinator client creation
         try:
             test_coord_client = await manager.get_test_coordinator_client(use_fallback=True)
-            self.print_info("TestCoordinatorClient created (connection will fail - expected)")
+            self.print_info("CoordinatorGrpcClient created (connection will fail - expected)")
 
             client_stats = test_coord_client.get_stats()
             self.print_stats("Test Coordinator Client Statistics", client_stats)
@@ -200,7 +200,7 @@ class TSE0001_3c_Validator:
             self.results["grpc_test_coordinator_client"] = True
         except ServiceCommunicationError as e:
             if "Connection failed" in str(e):
-                self.print_success("TestCoordinatorClient properly handles connection failures")
+                self.print_success("CoordinatorGrpcClient properly handles connection failures")
                 self.results["grpc_test_coordinator_client"] = True
             else:
                 self.results["grpc_test_coordinator_client"] = False
@@ -368,7 +368,7 @@ class TSE0001_3c_Validator:
         features = [
             "✅ ConfigurationServiceClient with caching and validation",
             "✅ InterServiceClientManager with connection pooling",
-            "✅ RiskMonitorClient and TestCoordinatorClient implementations",
+            "✅ RiskMonitorClient and CoordinatorGrpcClient implementations",
             "✅ Service discovery integration for dynamic endpoint resolution",
             "✅ Circuit breaker pattern for resilient communication",
             "✅ OpenTelemetry tracing and performance monitoring",

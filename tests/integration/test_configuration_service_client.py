@@ -369,8 +369,9 @@ class TestConfigurationServiceClient:
         client = ConfigurationServiceClient(settings, mock_service_discovery)
         assert client.settings.environment == "testing"
 
-        # Invalid environment should raise error
-        with pytest.raises(ValueError, match="Invalid environment"):
+        # Invalid environment should raise validation error
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             Settings(environment="invalid_env")
 
     @pytest.mark.asyncio
