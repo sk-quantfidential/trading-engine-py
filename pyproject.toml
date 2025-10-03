@@ -53,6 +53,9 @@ dependencies = [
     # Protobuf schemas (local path for development)
     "trading-ecosystem-schemas @ file:///home/skingham/Projects/Quantfidential/trading-ecosystem/protobuf-schemas/gen/python",
 
+    # Trading data adapter (local path for development)
+    "trading-data-adapter @ file:///home/skingham/Projects/Quantfidential/trading-ecosystem/trading-data-adapter-py",
+
     # Do we need any of these?
     "pyyaml>=6.0.0",
     "docker>=6.1.0",

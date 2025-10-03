@@ -1,6 +1,7 @@
 """Core trading business logic."""
 from typing import Dict, Optional
 
+from trading_data_adapter import TradingDataAdapter
 from trading_system.infrastructure.logging import get_logger
 
 logger = get_logger()
@@ -9,8 +10,13 @@ logger = get_logger()
 class TradingService:
     """Core trading service with market making strategies."""
 
-    def __init__(self) -> None:
-        """Initialize trading service."""
+    def __init__(self, adapter: Optional[TradingDataAdapter] = None) -> None:
+        """Initialize trading service.
+
+        Args:
+            adapter: Trading data adapter for persistence (optional for backward compatibility)
+        """
+        self.adapter = adapter
         self.positions: Dict[str, float] = {}
         self.orders: Dict[str, Dict] = {}
 
