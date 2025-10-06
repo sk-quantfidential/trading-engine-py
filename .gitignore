@@ -7,6 +7,7 @@ PR_*.md
 .claude_*
 .gitmodules
 CLAUDE.md
+proto/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
