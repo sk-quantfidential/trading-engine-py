@@ -38,25 +38,37 @@ class TestHealthResponse:
         response = HealthResponse(
             status="healthy",
             service="trading-system-engine",
-            version="1.0.0"
+            instance="trading-system-engine",
+            version="1.0.0",
+            environment="development",
+            timestamp="2025-10-08T12:00:00Z"
         )
 
         assert response.status == "healthy"
         assert response.service == "trading-system-engine"
+        assert response.instance == "trading-system-engine"
         assert response.version == "1.0.0"
+        assert response.environment == "development"
+        assert response.timestamp == "2025-10-08T12:00:00Z"
 
     def test_health_response_serialization(self):
         """Should serialize HealthResponse to JSON correctly."""
         response = HealthResponse(
             status="healthy",
             service="trading-system-engine",
-            version="1.0.0"
+            instance="trading-system-engine",
+            version="1.0.0",
+            environment="development",
+            timestamp="2025-10-08T12:00:00Z"
         )
 
         json_data = response.model_dump()
         assert json_data["status"] == "healthy"
         assert json_data["service"] == "trading-system-engine"
+        assert json_data["instance"] == "trading-system-engine"
         assert json_data["version"] == "1.0.0"
+        assert json_data["environment"] == "development"
+        assert json_data["timestamp"] == "2025-10-08T12:00:00Z"
 
 
 class TestReadinessResponse:
@@ -117,7 +129,10 @@ class TestHealthCheckBehavior:
         """Should return healthy status with service information."""
         with patch('trading_system.presentation.health.get_settings') as mock_get_settings:
             mock_settings = Mock()
+            mock_settings.service_name = "trading-system-engine"
+            mock_settings.service_instance_name = "trading-system-engine"
             mock_settings.version = "1.0.0"
+            mock_settings.environment = "testing"
             mock_get_settings.return_value = mock_settings
 
             response = client.get("/health")
@@ -126,7 +141,10 @@ class TestHealthCheckBehavior:
             data = response.json()
             assert data["status"] == "healthy"
             assert data["service"] == "trading-system-engine"
+            assert data["instance"] == "trading-system-engine"
             assert data["version"] == "1.0.0"
+            assert data["environment"] == "testing"
+            assert "timestamp" in data
 
     def test_readiness_check_returns_ready_status(self, client):
         """Should return ready status with dependency checks."""
@@ -179,7 +197,10 @@ class TestHealthCheckBehavior:
         with patch('trading_system.presentation.health.logger') as mock_logger:
             with patch('trading_system.presentation.health.get_settings') as mock_get_settings:
                 mock_settings = Mock()
+                mock_settings.service_name = "trading-system-engine"
+                mock_settings.service_instance_name = "trading-system-engine"
                 mock_settings.version = "1.0.0"
+                mock_settings.environment = "testing"
                 mock_get_settings.return_value = mock_settings
 
                 client.get("/health")
@@ -220,7 +241,10 @@ class TestHealthCheckBehavior:
         """Should return JSON content type for health endpoint."""
         with patch('trading_system.presentation.health.get_settings') as mock_get_settings:
             mock_settings = Mock()
+            mock_settings.service_name = "trading-system-engine"
+            mock_settings.service_instance_name = "trading-system-engine"
             mock_settings.version = "1.0.0"
+            mock_settings.environment = "testing"
             mock_get_settings.return_value = mock_settings
 
             response = client.get("/health")
@@ -237,20 +261,26 @@ class TestHealthCheckBehavior:
         """Should return response matching HealthResponse schema."""
         with patch('trading_system.presentation.health.get_settings') as mock_get_settings:
             mock_settings = Mock()
+            mock_settings.service_name = "trading-system-engine"
+            mock_settings.service_instance_name = "trading-system-engine"
             mock_settings.version = "1.0.0"
+            mock_settings.environment = "testing"
             mock_get_settings.return_value = mock_settings
 
             response = client.get("/health")
             data = response.json()
 
             # Should have all required fields
-            required_fields = {"status", "service", "version"}
+            required_fields = {"status", "service", "instance", "version", "environment", "timestamp"}
             assert set(data.keys()) == required_fields
 
             # Fields should have correct types
             assert isinstance(data["status"], str)
             assert isinstance(data["service"], str)
+            assert isinstance(data["instance"], str)
             assert isinstance(data["version"], str)
+            assert isinstance(data["environment"], str)
+            assert isinstance(data["timestamp"], str)
 
     def test_readiness_endpoint_response_structure_validation(self, client):
         """Should return response matching ReadinessResponse schema."""
@@ -271,7 +301,10 @@ class TestHealthCheckBehavior:
 
         with patch('trading_system.presentation.health.get_settings') as mock_get_settings:
             mock_settings = Mock()
+            mock_settings.service_name = "trading-system-engine"
+            mock_settings.service_instance_name = "trading-system-engine"
             mock_settings.version = test_version
+            mock_settings.environment = "testing"
             mock_get_settings.return_value = mock_settings
 
             response = client.get("/health")
@@ -282,20 +315,27 @@ class TestHealthCheckBehavior:
     def test_multiple_health_checks_behave_consistently(self, client):
         """Should return consistent responses across multiple requests."""
         with patch('trading_system.presentation.health.get_settings') as mock_get_settings:
-            mock_settings = Mock()
-            mock_settings.version = "1.0.0"
-            mock_get_settings.return_value = mock_settings
+            with patch('trading_system.presentation.health.datetime') as mock_datetime:
+                # Mock datetime to return consistent timestamp
+                mock_datetime.now.return_value.isoformat.return_value = "2025-10-08T12:00:00Z"
 
-            # Make multiple requests
-            responses = []
-            for _ in range(5):
-                response = client.get("/health")
-                responses.append(response.json())
+                mock_settings = Mock()
+                mock_settings.service_name = "trading-system-engine"
+                mock_settings.service_instance_name = "trading-system-engine"
+                mock_settings.version = "1.0.0"
+                mock_settings.environment = "testing"
+                mock_get_settings.return_value = mock_settings
 
-            # All responses should be identical
-            first_response = responses[0]
-            for response in responses[1:]:
-                assert response == first_response
+                # Make multiple requests
+                responses = []
+                for _ in range(5):
+                    response = client.get("/health")
+                    responses.append(response.json())
+
+                # All responses should be identical
+                first_response = responses[0]
+                for response in responses[1:]:
+                    assert response == first_response
 
     def test_health_router_integration_with_fastapi(self):
         """Should integrate properly with FastAPI router system."""
