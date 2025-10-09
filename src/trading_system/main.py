@@ -12,7 +12,14 @@ from fastapi import FastAPI
 from trading_data_adapter import AdapterConfig, create_adapter
 from trading_system.infrastructure.config import get_settings
 from trading_system.infrastructure.logging import setup_logging
+from trading_system.infrastructure.observability.metrics_middleware import (
+    create_red_metrics_middleware,
+)
+from trading_system.infrastructure.observability.prometheus_adapter import (
+    PrometheusMetricsAdapter,
+)
 from trading_system.presentation.health import router as health_router
+from trading_system.presentation.metrics import router as metrics_router
 
 
 @asynccontextmanager
@@ -62,6 +69,16 @@ def create_app() -> FastAPI:
     """Create and configure FastAPI application."""
     settings = get_settings()
 
+    # Initialize Prometheus metrics adapter (Clean Architecture)
+    constant_labels = {
+        "service": settings.service_name,
+        "instance": settings.service_instance_name,
+        "version": settings.version,
+    }
+    metrics_port = PrometheusMetricsAdapter(constant_labels)
+    logger = structlog.get_logger()
+    logger.info("Prometheus metrics adapter initialized")
+
     app = FastAPI(
         title="Trading System Engine API",
         description="Systematic trading with market making strategies",
@@ -69,8 +86,15 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    # Store metrics_port for access in routes and middleware
+    app.state.metrics_port = metrics_port
+
+    # RED metrics middleware (Clean Architecture: uses MetricsPort)
+    app.middleware("http")(create_red_metrics_middleware(metrics_port))
+
     # Include routers
     app.include_router(health_router, prefix="/api/v1", tags=["health"])
+    app.include_router(metrics_router, prefix="/api/v1/metrics", tags=["metrics"])
 
     return app
 

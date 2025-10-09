@@ -671,7 +671,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN pip install -e .
 
-EXPOSE 8083 50054
+EXPOSE 8080 50051
 CMD ["python", "-m", "trading_engine.main"]
 ```
 

@@ -160,7 +160,7 @@ class TestConfigurationServiceClient:
             version="1.0.0",
             host="localhost",
             http_port=8080,
-            grpc_port=9090,
+            grpc_port=50051,
             status="healthy"
         )
         mock_discovery.get_service = AsyncMock(return_value=mock_service_info)

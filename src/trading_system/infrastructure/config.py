@@ -23,8 +23,8 @@ class Settings(BaseSettings):
 
     # Server settings
     host: str = "0.0.0.0"
-    http_port: int = Field(default=8083, gt=0, le=65535)  # Trading Engine HTTP port
-    grpc_port: int = Field(default=50053, gt=0, le=65535)  # Trading Engine gRPC port
+    http_port: int = Field(default=8083, gt=0, le=65535)  # Trading Engine HTTP port (TSE-0001.12.0)
+    grpc_port: int = Field(default=50053, gt=0, le=65535)  # Trading Engine gRPC port (TSE-0001.12.0)
 
     # Logging settings
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
