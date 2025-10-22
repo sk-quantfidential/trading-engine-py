@@ -9,6 +9,7 @@ import structlog
 import uvicorn
 from fastapi import FastAPI
 
+from trading_data_adapter import AdapterConfig, create_adapter
 from trading_system.infrastructure.config import get_settings
 from trading_system.infrastructure.logging import setup_logging
 from trading_system.presentation.health import router as health_router
@@ -22,11 +23,26 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     logger.info("Starting Trading System Engine service", version=settings.version)
 
+    # Initialize trading data adapter
+    adapter_config = AdapterConfig()
+    adapter = await create_adapter(adapter_config)
+
+    # Store adapter in app state for access in routes
+    app.state.trading_adapter = adapter
+
+    logger.info("Trading data adapter initialized",
+                postgres_connected=adapter.connection_status.postgres_connected,
+                redis_connected=adapter.connection_status.redis_connected)
+
     # Startup logic here
     yield
 
     # Shutdown logic here
     logger.info("Shutting down Trading System Engine service")
+
+    # Disconnect adapter
+    await adapter.disconnect()
+    logger.info("Trading data adapter disconnected")
 
 
 def create_app() -> FastAPI:
