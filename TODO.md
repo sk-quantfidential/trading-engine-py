@@ -135,3 +135,40 @@
 ---
 
 **Last Updated**: 2025-10-03
+
+### 🏢 Milestone TSE-0001.12.0: Named Components Foundation (Multi-Instance Infrastructure)
+**Status**: ✅ **COMPLETED** (2025-10-08)
+**Priority**: High
+**Branch**: `feature/TSE-0001.12.0-named-components-foundation`
+
+**Completed Tasks**:
+- [x] Add service_instance_name to infrastructure/config.py
+- [x] Add environment field with "docker" support
+- [x] Update health endpoint with instance metadata
+- [x] Add structured logging with instance context binding
+- [x] Update Dockerfile for parent directory context
+- [x] Add docker-compose deployment configuration
+- [x] Add prometheus scraping configuration
+- [x] Update default ports (HTTP 8083, gRPC 50053)
+- [x] Add field_validator for case-insensitive log_level
+- [x] Fix data adapter configuration initialization
+- [x] Create comprehensive startup tests (19/19 passing)
+- [x] Validate Clean Architecture compliance
+
+**Deliverables**:
+- ✅ Instance-aware configuration (singleton and multi-instance ready)
+- ✅ Health endpoint returns: service, instance, version, environment, timestamp
+- ✅ Structured logging includes instance context in all logs
+- ✅ Docker deployment with proper environment variables
+- ✅ 19 startup tests validating instance awareness
+- ✅ All 119 tests passing (100 existing + 19 new)
+- ✅ 100% Clean Architecture compliance (no domain contamination)
+
+**BDD Acceptance**: ✅ Trading System Engine can be deployed as singleton (trading-system-engine) or multi-instance (trading-system-engine-LH, trading-system-engine-Alpha) with automatic schema/namespace derivation via trading-data-adapter-py
+
+**Dependencies**: TSE-0001.3c (Python Services gRPC Integration), TSE-0001.4.5 (Trading System Engine Data Adapter Integration)
+
+**Integration Points**:
+- trading-data-adapter-py: Derives PostgreSQL schema ("trading") and Redis namespace ("trading") from instance name
+- orchestrator-docker: Deployed with SERVICE_INSTANCE_NAME=trading-system-engine (singleton)
+- Prometheus: Scrapes metrics with instance_name label on port 8083

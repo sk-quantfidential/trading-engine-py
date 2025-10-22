@@ -19,12 +19,25 @@ from trading_system.presentation.health import router as health_router
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager."""
     settings = get_settings()
+
+    # Bind instance context to logger for all future logs
     logger = structlog.get_logger()
+    logger = logger.bind(
+        service_name=settings.service_name,
+        instance_name=settings.service_instance_name,
+        environment=settings.environment,
+    )
 
     logger.info("Starting Trading System Engine service", version=settings.version)
 
-    # Initialize trading data adapter
-    adapter_config = AdapterConfig()
+    # Initialize trading data adapter with service identity
+    adapter_config = AdapterConfig(
+        service_name=settings.service_name,
+        service_instance_name=settings.service_instance_name,
+        environment=settings.environment,
+        postgres_url=settings.postgres_url,
+        redis_url=settings.redis_url,
+    )
     adapter = await create_adapter(adapter_config)
 
     # Store adapter in app state for access in routes

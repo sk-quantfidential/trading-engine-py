@@ -1,4 +1,5 @@
 """Health check endpoints for Trading System Engine service."""
+from datetime import datetime, timezone
 from typing import Dict
 
 from fastapi import APIRouter, status
@@ -12,10 +13,13 @@ logger = get_logger()
 
 
 class HealthResponse(BaseModel):
-    """Health check response model."""
+    """Health check response model with instance awareness."""
     status: str
     service: str
+    instance: str
     version: str
+    environment: str
+    timestamp: str
 
 
 class ReadinessResponse(BaseModel):
@@ -26,15 +30,18 @@ class ReadinessResponse(BaseModel):
 
 @router.get("/health", status_code=status.HTTP_200_OK, response_model=HealthResponse)
 async def health_check() -> HealthResponse:
-    """Basic health check endpoint."""
+    """Basic health check endpoint with instance metadata."""
     settings = get_settings()
 
     logger.info("Health check requested")
 
     return HealthResponse(
         status="healthy",
-        service="trading-system-engine",
+        service=settings.service_name,
+        instance=settings.service_instance_name,
         version=settings.version,
+        environment=settings.environment,
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
 
