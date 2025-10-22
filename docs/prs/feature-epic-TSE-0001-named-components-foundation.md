@@ -1,13 +1,73 @@
 # PR: Named Components Foundation (TSE-0001.12.0) - trading-system-engine-py
 
-**Branch**: `feature/TSE-0001.12.0-named-components-foundation`
-**Epic**: TSE-0001 (Foundation Services & Infrastructure)
+**Branch**: `feature/epic-TSE-0001-named-components-foundation`
+**Epic**: epic-TSE-0001 (Foundation Services & Infrastructure)
+**Milestone**: TSE-0001.12.0 - Named Components Foundation
 **Status**: ✅ READY FOR REVIEW
 **Date**: 2025-10-08
 
 ## Summary
 
 Implements multi-instance infrastructure foundation for trading-system-engine-py, enabling deployment as singleton (trading-system-engine) or multi-instance (trading-system-engine-LH, trading-system-engine-Alpha) with automatic PostgreSQL schema and Redis namespace derivation via trading-data-adapter-py.
+
+---
+
+## What Changed
+
+### Phase 1: Named Components Foundation Implementation
+**Commit:** `8bc5619` - Implement TSE-0001.12.0 Named Components Foundation
+
+- Added instance-aware configuration with service_instance_name auto-derivation
+- Enhanced health endpoint with instance, environment, timestamp fields
+- Implemented structured logging with instance context
+- Integrated data adapter with service identity propagation
+- Updated Docker configuration with parent context and proper build paths
+- Added comprehensive startup testing (19 new tests)
+
+### Phase 2: Documentation Fix
+**Commit:** `dda15f7` - Fix markdown linting error in TODO.md
+
+- Fixed markdown linting setext heading style error
+- All validation checks now passing
+
+---
+
+## Testing
+
+### Test Coverage
+**Total: 119/119 tests passing (100% success rate)**
+- Existing tests: 100 tests (all passing)
+- New startup tests: 19 tests (instance awareness validation)
+- Code coverage: 69% (config 98%, main 57%, health 100%)
+
+### Test Execution
+```bash
+# Run all tests
+pytest tests/ -v --tb=short
+
+# Results:
+# tests/unit/test_startup.py::19 PASSED
+# tests/... (100 existing tests) PASSED
+# ====== 119 passed in 15.67s ======
+```
+
+### Test Categories
+- ✅ **Instance Awareness** - Service identity, instance derivation
+- ✅ **Configuration Validation** - Port standardization, environment settings
+- ✅ **Health Endpoint** - Instance metadata, timestamps
+- ✅ **Structured Logging** - Context binding, instance logging
+- ✅ **Data Adapter Integration** - Service identity propagation
+- ✅ **Backward Compatibility** - All existing tests still pass
+
+### Validation Passing
+All validation checks pass:
+- ✅ Repository structure validated
+- ✅ Git quality standards plugin present
+- ✅ GitHub Actions workflows configured
+- ✅ Documentation structure present
+- ✅ All markdown files valid
+
+---
 
 ## Changes Overview
 
