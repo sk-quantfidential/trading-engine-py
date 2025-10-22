@@ -163,7 +163,7 @@ app.include_router(metrics_router, prefix="/api/v1/metrics", tags=["metrics"])
 
 **All Tests:** 138 passed (119 existing + 19 new)
 
-**Coverage:** 
+**Coverage:**
 - domain/ports/metrics.py: 89%
 - prometheus_adapter.py: 92%
 - Overall project: 69% (includes legacy code)
