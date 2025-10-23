@@ -58,7 +58,7 @@ This PR implements Prometheus metrics collection for trading-system-engine-py us
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Changes
+## What Changed
 
 ### 1. Domain Layer - MetricsPort Interface (NEW)
 

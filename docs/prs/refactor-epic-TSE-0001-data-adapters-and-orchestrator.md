@@ -46,7 +46,7 @@ Integrated **trading-data-adapter-py** into trading-system-engine-py, providing 
 
 ---
 
-## Changes
+## What Changed
 
 ### Application Lifecycle (`src/trading_system/main.py`)
 
