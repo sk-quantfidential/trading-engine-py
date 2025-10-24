@@ -69,7 +69,7 @@ All validation checks pass:
 
 ---
 
-## Changes Overview
+## What Changed
 
 ### 1. Instance-Aware Configuration (config.py)
 - Added `service_instance_name` with auto-derivation

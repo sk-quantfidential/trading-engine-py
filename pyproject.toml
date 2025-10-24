@@ -104,7 +104,7 @@ allow-direct-references = true
 path = "src/trading_system/__init__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = [{ include = "trading_system", from = "src" }]
+packages = ["src/trading_system"]
 
 [tool.ruff]
 target-version = "py313"
