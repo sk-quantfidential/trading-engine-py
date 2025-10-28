@@ -4,15 +4,28 @@
 
 Enhanced git workflow quality standards with v2 improvements including markdown linting, repository validation, and plugin architecture organization. This upgrade provides comprehensive quality gates for all git operations.
 
-**What Changed**:
-- Added `.claude/plugins/git_quality_standards/` plugin architecture (18 files, 4,481 lines)
-- Integrated markdown linting with `.markdownlint.json` configuration
-- Added repository structure validation script (`scripts/validate-all.sh`)
-- Upgraded pre-push hook from 6 to 7 validation checks
-- Updated GitHub Actions workflows for PR and repository validation
-- Added PR documentation template and validation exceptions
+## What Changed
 
-**Why**:
+### trading-system-engine-py
+
+**Plugin Architecture**:
+- Added `.claude/plugins/git_quality_standards/` plugin (18 files, 4,481 lines)
+- Integrated markdown linting with `.markdownlint.json` configuration
+- Added repository validation script (`scripts/validate-all.sh`)
+- Upgraded pre-push hook from 6 to 7 validation checks
+
+**GitHub Integration**:
+- Updated GitHub Actions workflows for PR and repository validation
+- Added PR documentation template
+- Added validation exceptions configuration
+
+**Quality Gates**:
+- Markdown linting before push
+- Repository structure validation
+- Protected branch checks
+- PR documentation requirements
+
+## Why
 - Catch documentation errors before push (markdown linting)
 - Validate repository structure automatically (comprehensive validation)
 - Separate workflow tooling from component code (plugin architecture)
