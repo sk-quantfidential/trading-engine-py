@@ -64,35 +64,11 @@ if [[ -f "docs/prs/${BRANCH}.md" ]]; then
   PR_DOC="docs/prs/${BRANCH}.md"
 fi
 
-# Try with PR prefix mapping
+# Try with slashes converted to dashes (common PR file naming convention)
 if [[ -z "$PR_DOC" ]]; then
-  BRANCH_TYPE="${BRANCH%%/*}"
-  case "$BRANCH_TYPE" in
-    feature) PR_PREFIX="feat" ;;
-    fix) PR_PREFIX="fix" ;;
-    docs) PR_PREFIX="docs" ;;
-    style) PR_PREFIX="style" ;;
-    refactor) PR_PREFIX="refac" ;;
-    test) PR_PREFIX="test" ;;
-    chore) PR_PREFIX="chore" ;;
-    ci) PR_PREFIX="ci" ;;
-    *) PR_PREFIX="$BRANCH_TYPE" ;;
-  esac
-
-  # Try: docs/prs/{pr-prefix}-epic-XXX-9999-*.md
-  PATTERN="docs/prs/${PR_PREFIX}-epic-*.md"
-  MATCHES=($(compgen -G "$PATTERN" 2>/dev/null || true))
-
-  if [[ ${#MATCHES[@]} -eq 1 ]]; then
-    PR_DOC="${MATCHES[0]}"
-  elif [[ ${#MATCHES[@]} -gt 1 ]]; then
-    echo -e "${YELLOW}⚠️  Multiple PR docs found:${NC}"
-    for i in "${!MATCHES[@]}"; do
-      echo "  $((i+1)). ${MATCHES[$i]}"
-    done
-    echo ""
-    read -p "Select file (1-${#MATCHES[@]}): " -r
-    PR_DOC="${MATCHES[$((REPLY-1))]}"
+  BRANCH_WITH_DASHES="${BRANCH//\//-}"
+  if [[ -f "docs/prs/${BRANCH_WITH_DASHES}.md" ]]; then
+    PR_DOC="docs/prs/${BRANCH_WITH_DASHES}.md"
   fi
 fi
 
